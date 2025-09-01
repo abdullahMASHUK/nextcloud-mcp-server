@@ -20,7 +20,7 @@ npm install -g nextcloud-mcp-server
 
 ### From Source
 ```bash
-git clone <repository-url>
+git clone https://github.com/abdullahMASHUK/nextcloud-mcp-server.git
 cd nextcloud-mcp-server
 npm install
 npm run build
