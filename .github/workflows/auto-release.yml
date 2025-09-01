@@ -5,6 +5,11 @@ on:
     branches: [master]
     paths: ['package.json']
 
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
 jobs:
   check-version:
     name: 🔍 Check Version Changes
@@ -17,6 +22,7 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 2
           
       - name: 🔍 Check if version changed
@@ -57,14 +63,9 @@ jobs:
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
         
-      - name: 🏷️ Create tag
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git tag v${{ needs.check-version.outputs.new_version }}
-          git push origin v${{ needs.check-version.outputs.new_version }}
-          
       - name: 📝 Generate release notes
         id: release_notes
         run: |
@@ -92,12 +93,13 @@ jobs:
           EOF
           
       - name: 🎉 Create GitHub Release
-        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ needs.check-version.outputs.new_version }}
-          release_name: 🎉 NextCloud MCP Server v${{ needs.check-version.outputs.new_version }}
-          body_path: release_notes.md
-          draft: false
-          prerelease: false
+        run: |
+          VERSION="${{ needs.check-version.outputs.new_version }}"
+          
+          # Create release using GitHub CLI (this automatically creates the tag)
+          gh release create "v$VERSION" \
+            --title "🎉 NextCloud MCP Server v$VERSION" \
+            --notes-file release_notes.md \
+            --latest

@@ -23,6 +23,11 @@ on:
         default: true
         type: boolean
 
+permissions:
+  contents: write
+  packages: write
+  pull-requests: write
+
 jobs:
   publish:
     name: 📦 Manual Publish to npm
