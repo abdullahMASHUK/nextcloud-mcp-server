@@ -1,23 +1,27 @@
+/** @type {import('jest').Config} */
 export default {
   preset: 'ts-jest/presets/default-esm',
   testEnvironment: 'node',
   extensionsToTreatAsEsm: ['.ts'],
   transform: {
-    '^.+\\.tsx?$': ['ts-jest', {
+    '^.+\\.(ts|tsx)$': ['ts-jest', {
       useESM: true,
+      tsconfig: {
+        module: 'esnext',
+      },
     }],
   },
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@modelcontextprotocol)/)',
+    'node_modules/(?!(@modelcontextprotocol|@types)/)',
   ],
-  roots: ['<rootDir>/src', '<rootDir>/__tests__'],
   testMatch: ['**/__tests__/**/*.ts', '**/?(*.)+(spec|test).ts'],
   collectCoverageFrom: [
     'src/**/*.ts',
     '!src/**/*.d.ts',
-    '!src/types.ts',
   ],
+  setupFilesAfterEnv: [],
+  testTimeout: 30000,
 };
