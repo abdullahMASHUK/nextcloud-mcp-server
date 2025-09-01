@@ -1,5 +1,5 @@
 {
-  "name": "nextcloud-mcp-server",
+  "name": "@abdullahmashuk/nextcloud-mcp-server",
   "version": "1.0.11",
   "description": "Professional NextCloud MCP server for file operations and sharing",
   "author": "Abdullah MASHUK <abdullah.devs@gmail.com>",
