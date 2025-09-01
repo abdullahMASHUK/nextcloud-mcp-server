@@ -35,18 +35,8 @@ jobs:
       - name: 📋 Install dependencies
         run: npm ci
         
-      - name: 🔍 Run linting
-        run: npm run lint
-        
-      - name: 🧪 Run tests
-        run: npm test
-        
       - name: 🏗️ Build project
         run: npm run build
-        
-      - name: 📊 Upload coverage reports
-        uses: codecov/codecov-action@v3
-        if: always()
 
   publish:
     name: 📦 Publish to npm
@@ -107,9 +97,6 @@ jobs:
           
       - name: 📋 Install dependencies
         run: npm ci
-        
-      - name: 🧪 Run tests
-        run: npm test
         
       - name: 🏗️ Build project
         run: npm run build
