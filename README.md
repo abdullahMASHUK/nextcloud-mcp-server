@@ -28,17 +28,33 @@ npm run build
 
 ## Configuration
 
-1. Copy the environment template:
+### Security: App Password Setup (Recommended)
+
+For enhanced security, it's strongly recommended to use an **App Password** instead of your main NextCloud account password.
+
+1. **Create an App Password in NextCloud:**
+   - Go to your NextCloud → Settings → Security
+   - Scroll down to "App passwords" section
+   - Enter a name like "MCP Server" and click "Create new app password"
+   - Copy the generated app password (it will look like: `xxxxx-xxxxx-xxxxx-xxxxx-xxxxx`)
+
+2. **Copy the environment template:**
 ```bash
 cp .env.example .env
 ```
 
-2. Edit `.env` with your NextCloud credentials:
+3. **Edit `.env` with your NextCloud credentials:**
 ```bash
 NEXTCLOUD_URL=https://your-nextcloud-server.com
 NEXTCLOUD_USERNAME=your-username
-NEXTCLOUD_PASSWORD=your-password
+NEXTCLOUD_PASSWORD=your-app-password-here  # Use the app password, not your main password
 ```
+
+**⚠️ Important Security Notes:**
+- Always use app passwords instead of your main account password
+- App passwords can be revoked at any time if compromised
+- Each app password can have specific access permissions
+- Store credentials securely and never commit them to version control
 
 ## Usage
 
@@ -170,6 +186,27 @@ Run tests with coverage:
 ```bash
 npm run test:coverage
 ```
+
+## Security Considerations
+
+### App Passwords (Highly Recommended)
+- **Always use App Passwords** instead of your main NextCloud password
+- Create app passwords at: NextCloud → Settings → Security → App passwords
+- App passwords provide limited scope and can be revoked independently
+- Each app password should be used for a single application/service
+
+### Best Practices
+- Store credentials securely using environment variables or secure vault systems
+- Never commit passwords or tokens to version control
+- Use HTTPS for your NextCloud server
+- Regularly rotate app passwords
+- Monitor access logs for unusual activity
+- Consider IP restrictions if your NextCloud supports them
+
+### Environment Security
+- Keep your `.env` file private and never commit it
+- Use different credentials for development and production
+- Consider using environment-specific app passwords
 
 ## License
 
