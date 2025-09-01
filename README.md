@@ -13,7 +13,7 @@ A professional Model Context Protocol (MCP) server for NextCloud integration, pr
 
 ## Installation
 
-### From NPM (when published)
+### From NPM
 ```bash
 npm install -g nextcloud-mcp-server
 ```
