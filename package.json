@@ -1,6 +1,6 @@
 {
   "name": "nextcloud-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Professional NextCloud MCP server for file operations and sharing",
   "author": "NextCloud MCP Team",
   "license": "MIT",
