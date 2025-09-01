@@ -1,0 +1,17 @@
+# This file tells GitHub that this repository contains an npm package
+# and helps with package detection and linking
+
+name: nextcloud-mcp-server
+description: Professional NextCloud MCP server for file operations and sharing
+version: 1.0.4
+main: build/index.js
+repository: https://github.com/abdullahMASHUK/nextcloud-mcp-server
+author: Abdullah MASHUK
+license: MIT
+keywords:
+  - mcp
+  - model-context-protocol
+  - nextcloud
+  - webdav
+  - file-sharing
+  - typescript
