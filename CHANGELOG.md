@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Professional npm package structure
 - Jest testing framework setup
 - ESLint and Prettier configuration
+
+### Changed
+- Repository configured for personal management under abdullahMASHUK GitHub account
 - GitHub Actions CI/CD pipeline
 - Complete documentation and usage examples
 - MIT license
