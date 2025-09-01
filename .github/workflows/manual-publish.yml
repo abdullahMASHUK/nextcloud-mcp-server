@@ -1,0 +1,138 @@
+name: 🚀 Manual Publish Workflow
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: 'Dry run (test without publishing)'
+        required: false
+        default: false
+        type: boolean
+      create_release:
+        description: 'Create GitHub release'
+        required: false
+        default: true
+        type: boolean
+
+jobs:
+  publish:
+    name: 📦 Manual Publish to npm
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+          cache: 'npm'
+          
+      - name: 📋 Install dependencies
+        run: npm ci
+        
+      - name: 🔍 Run linting
+        run: npm run lint
+        
+      - name: 🧪 Run tests
+        run: npm test
+        
+      - name: 🏗️ Build project
+        run: npm run build
+        
+      - name: 🏷️ Bump version
+        id: version
+        run: |
+          OLD_VERSION=$(node -p "require('./package.json').version")
+          npm version ${{ github.event.inputs.version_type }} --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          
+          echo "old_version=$OLD_VERSION" >> $GITHUB_OUTPUT
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          
+          echo "## 📊 Version Information" >> $GITHUB_STEP_SUMMARY
+          echo "- **Previous Version:** $OLD_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **New Version:** $NEW_VERSION" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bump Type:** ${{ github.event.inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
+          
+      - name: 🔍 Verify package (Dry Run)
+        if: github.event.inputs.dry_run == 'true'
+        run: |
+          echo "🔍 DRY RUN MODE - Package verification only"
+          npm pack --dry-run
+          echo "## 🔍 Dry Run Results" >> $GITHUB_STEP_SUMMARY
+          echo "✅ Package would be published successfully" >> $GITHUB_STEP_SUMMARY
+          echo "- **Would publish:** nextcloud-mcp-server@${{ steps.version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          
+      - name: 📝 Commit version bump
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          git config --local user.email "abdullah.devs@gmail.com"
+          git config --local user.name "abdullahMASHUK"
+          git add package.json package-lock.json
+          git commit -m "🔖 Bump version to ${{ steps.version.outputs.new_version }}"
+          
+      - name: 🏷️ Create and push tag
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          git tag v${{ steps.version.outputs.new_version }}
+          git push origin HEAD:master
+          git push origin v${{ steps.version.outputs.new_version }}
+          
+      - name: 📦 Publish to npm
+        if: github.event.inputs.dry_run == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          
+      - name: 🎉 Create GitHub Release
+        if: github.event.inputs.dry_run == 'false' && github.event.inputs.create_release == 'true'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          release_name: 🎉 NextCloud MCP Server v${{ steps.version.outputs.new_version }}
+          body: |
+            ## 🚀 What's New in v${{ steps.version.outputs.new_version }}
+            
+            ### ✨ Changes
+            - Version bumped from ${{ steps.version.outputs.old_version }} to ${{ steps.version.outputs.new_version }}
+            - Bug fixes and improvements
+            
+            ### 📦 Installation
+            ```bash
+            npm install -g nextcloud-mcp-server@${{ steps.version.outputs.new_version }}
+            ```
+            
+            ### 🔗 Links
+            - 📦 [npm Package](https://www.npmjs.com/package/nextcloud-mcp-server)
+            - 📚 [Documentation](https://github.com/abdullahMASHUK/nextcloud-mcp-server#readme)
+            - 🐛 [Report Issues](https://github.com/abdullahMASHUK/nextcloud-mcp-server/issues)
+          draft: false
+          prerelease: false
+          
+      - name: 📊 Success Summary
+        if: github.event.inputs.dry_run == 'false'
+        run: |
+          echo "## 🎉 Publishing Complete!" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Package Published:** nextcloud-mcp-server@${{ steps.version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Tag Created:** v${{ steps.version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **GitHub Release:** Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [npm Package](https://www.npmjs.com/package/nextcloud-mcp-server)" >> $GITHUB_STEP_SUMMARY
+          echo "- [GitHub Release](https://github.com/abdullahMASHUK/nextcloud-mcp-server/releases/tag/v${{ steps.version.outputs.new_version }})" >> $GITHUB_STEP_SUMMARY
