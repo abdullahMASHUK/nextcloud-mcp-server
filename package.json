@@ -46,6 +46,13 @@
     "url": "https://github.com/abdullahMASHUK/nextcloud-mcp-server/issues"
   },
   "homepage": "https://github.com/abdullahMASHUK/nextcloud-mcp-server#readme",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/abdullahMASHUK"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "engines": {
     "node": ">=18.0.0"
   },
