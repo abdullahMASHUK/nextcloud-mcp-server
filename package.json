@@ -58,6 +58,7 @@
     "url": "https://github.com/sponsors/abdullahMASHUK"
   },
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "engines": {
