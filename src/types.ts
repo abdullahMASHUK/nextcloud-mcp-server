@@ -146,3 +146,39 @@ export interface OcsShareData {
   mail_send?: number;
   hide_download?: number;
 }
+
+// File operation interfaces
+export interface MoveFileOptions {
+  sourcePath: string;
+  destinationPath: string;
+  overwrite?: boolean;
+}
+
+export interface CopyFileOptions {
+  sourcePath: string;
+  destinationPath: string;
+  overwrite?: boolean;
+}
+
+export interface SearchOptions {
+  query: string;
+  path?: string;
+  limit?: number;
+  type?: 'file' | 'directory' | 'all';
+}
+
+export interface FileVersion {
+  id: string;
+  timestamp: Date;
+  size: number;
+  user: string;
+  label?: string;
+}
+
+export interface TagInfo {
+  id: string;
+  name: string;
+  userVisible: boolean;
+  userAssignable: boolean;
+  canAssign: boolean;
+}

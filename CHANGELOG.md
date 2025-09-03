@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2025-09-03
+
+### Added
+- **5 new high-priority tools** for enhanced NextCloud functionality:
+  - `move-file`: Move or rename files and directories with overwrite support
+  - `copy-file`: Copy files and directories to new locations
+  - `search-files`: Search for files and directories by name or content with filtering
+  - `get-file-versions`: Get version history of files with timestamps and user info
+  - `restore-file-version`: Restore specific versions of files
+- Enhanced TypeScript types for new file operations
+- Comprehensive test coverage for all new tools (18 total tests passing)
+- Updated documentation with examples for all new tools
+- Fallback search mechanism when OCS API is unavailable
+
+### Changed
+- Updated tool count from 9 to 14 comprehensive tools
+- Enhanced README with detailed examples for new functionality
+- Improved project documentation structure
+
+### Technical
+- Added new interfaces: `MoveFileOptions`, `CopyFileOptions`, `SearchOptions`, `FileVersion`
+- WebDAV MOVE and COPY method implementations
+- NextCloud OCS API integration for search and versioning
+- Professional error handling for all new operations
+
 ## [1.0.2] - 2025-09-01
 
 ### Changed

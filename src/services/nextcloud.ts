@@ -6,7 +6,11 @@ import {
   FileInfo,
   ShareInfo,
   CreateShareOptions,
-  ApiResponse
+  ApiResponse,
+  MoveFileOptions,
+  CopyFileOptions,
+  SearchOptions,
+  FileVersion
 } from '../types.js';
 
 export class NextCloudService {
@@ -314,5 +318,220 @@ export class NextCloudService {
       success: false,
       error: `${message}: ${errorMessage}`
     };
+  }
+
+  // High Priority Tools Implementation
+
+  async moveFile(options: MoveFileOptions): Promise<ApiResponse<string>> {
+    try {
+      const sourceUrl = `${this.config.webdavPath}${options.sourcePath.replace(/^\//, '')}`;
+      const destinationUrl = `${this.config.baseUrl}${this.config.webdavPath}${options.destinationPath.replace(/^\//, '')}`;
+
+      const headers: any = {
+        'Destination': destinationUrl
+      };
+
+      if (options.overwrite) {
+        headers['Overwrite'] = 'T';
+      }
+
+      const response = await this.httpClient.request({
+        method: 'MOVE',
+        url: sourceUrl,
+        headers
+      });
+
+      if (response.status === 201 || response.status === 204) {
+        return {
+          success: true,
+          data: `File moved successfully from ${options.sourcePath} to ${options.destinationPath}`
+        };
+      } else {
+        return {
+          success: false,
+          error: `Move operation failed with status ${response.status}`
+        };
+      }
+    } catch (error: any) {
+      return this.handleError('Move file failed', error);
+    }
+  }
+
+  async copyFile(options: CopyFileOptions): Promise<ApiResponse<string>> {
+    try {
+      const sourceUrl = `${this.config.webdavPath}${options.sourcePath.replace(/^\//, '')}`;
+      const destinationUrl = `${this.config.baseUrl}${this.config.webdavPath}${options.destinationPath.replace(/^\//, '')}`;
+
+      const headers: any = {
+        'Destination': destinationUrl
+      };
+
+      if (options.overwrite) {
+        headers['Overwrite'] = 'T';
+      }
+
+      const response = await this.httpClient.request({
+        method: 'COPY',
+        url: sourceUrl,
+        headers
+      });
+
+      if (response.status === 201 || response.status === 204) {
+        return {
+          success: true,
+          data: `File copied successfully from ${options.sourcePath} to ${options.destinationPath}`
+        };
+      } else {
+        return {
+          success: false,
+          error: `Copy operation failed with status ${response.status}`
+        };
+      }
+    } catch (error: any) {
+      return this.handleError('Copy file failed', error);
+    }
+  }
+
+  async searchFiles(options: SearchOptions): Promise<ApiResponse<FileInfo[]>> {
+    try {
+      // Use NextCloud's search API endpoint
+      const searchPath = options.path ? options.path.replace(/^\//, '') : '';
+      const params = new URLSearchParams({
+        term: options.query,
+        limit: (options.limit || 50).toString()
+      });
+
+      if (searchPath) {
+        params.append('in', searchPath);
+      }
+
+      const response = await this.httpClient.get(`/ocs/v2.php/apps/files/api/v1/search/${searchPath}?${params.toString()}`, {
+        headers: {
+          'OCS-APIRequest': 'true',
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.data?.ocs?.data) {
+        const searchResults = response.data.ocs.data;
+        const files: FileInfo[] = searchResults.map((item: any) => ({
+          name: item.name || item.basename,
+          path: item.path,
+          size: parseInt(item.size) || 0,
+          type: item.type === 'folder' ? 'directory' : 'file',
+          lastModified: new Date(item.mtime * 1000),
+          mimeType: item.mimetype
+        }));
+
+        // Filter by type if specified
+        const filteredFiles = options.type && options.type !== 'all' 
+          ? files.filter(file => file.type === options.type)
+          : files;
+
+        return {
+          success: true,
+          data: filteredFiles
+        };
+      } else {
+        return {
+          success: true,
+          data: []
+        };
+      }
+    } catch (error: any) {
+      // Fallback to WebDAV-based search if OCS API is not available
+      return this.fallbackSearch(options);
+    }
+  }
+
+  private async fallbackSearch(options: SearchOptions): Promise<ApiResponse<FileInfo[]>> {
+    try {
+      // Get all files and filter locally
+      const allFiles = await this.listFiles(options.path || '/');
+      
+      if (!allFiles.success || !allFiles.data) {
+        return allFiles;
+      }
+
+      const query = options.query.toLowerCase();
+      const filteredFiles = allFiles.data.filter(file => {
+        const matchesName = file.name.toLowerCase().includes(query);
+        const matchesType = !options.type || options.type === 'all' || file.type === options.type;
+        return matchesName && matchesType;
+      });
+
+      const limitedFiles = options.limit 
+        ? filteredFiles.slice(0, options.limit)
+        : filteredFiles;
+
+      return {
+        success: true,
+        data: limitedFiles
+      };
+    } catch (error: any) {
+      return this.handleError('Search files failed', error);
+    }
+  }
+
+  async getFileVersions(path: string): Promise<ApiResponse<FileVersion[]>> {
+    try {
+      const response = await this.httpClient.get(`/ocs/v2.php/apps/files_versions/api/v1/versions/${encodeURIComponent(path)}`, {
+        headers: {
+          'OCS-APIRequest': 'true',
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.data?.ocs?.data) {
+        const versions: FileVersion[] = response.data.ocs.data.map((version: any) => ({
+          id: version.id.toString(),
+          timestamp: new Date(version.timestamp * 1000),
+          size: parseInt(version.size) || 0,
+          user: version.user || 'unknown',
+          label: version.label
+        }));
+
+        return {
+          success: true,
+          data: versions
+        };
+      } else {
+        return {
+          success: true,
+          data: []
+        };
+      }
+    } catch (error: any) {
+      return this.handleError('Get file versions failed', error);
+    }
+  }
+
+  async restoreFileVersion(path: string, versionId: string): Promise<ApiResponse<string>> {
+    try {
+      const response = await this.httpClient.post(
+        `/ocs/v2.php/apps/files_versions/api/v1/versions/${encodeURIComponent(path)}/${versionId}`,
+        {},
+        {
+          headers: {
+            'OCS-APIRequest': 'true',
+            'Accept': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200) {
+        return {
+          success: true,
+          data: `File version ${versionId} restored successfully for ${path}`
+        };
+      } else {
+        return {
+          success: false,
+          error: `Restore operation failed with status ${response.status}`
+        };
+      }
+    } catch (error: any) {
+      return this.handleError('Restore file version failed', error);
+    }
   }
 }

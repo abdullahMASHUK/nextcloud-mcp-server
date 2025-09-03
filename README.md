@@ -32,7 +32,7 @@
 
 ### ✨ Key Capabilities
 
-- 🎯 **9 Comprehensive Tools** - Complete file operations and sharing management
+- 🎯 **14 Comprehensive Tools** - Complete file operations and sharing management
 - 🔐 **Enhanced Security** - Built-in app password support and best practices
 - 🏗️ **Professional Architecture** - TypeScript-first with full type safety
 - 📚 **Rich Documentation** - Detailed guides and examples
@@ -175,6 +175,26 @@ node build/index.js
 <td><strong>⬇️ download-file</strong></td>
 <td>Download files from NextCloud</td>
 </tr>
+<tr>
+<td><strong>🔄 move-file</strong></td>
+<td>Move or rename files and directories</td>
+</tr>
+<tr>
+<td><strong>📄 copy-file</strong></td>
+<td>Copy files and directories to new locations</td>
+</tr>
+<tr>
+<td><strong>🔍 search-files</strong></td>
+<td>Search for files and directories by name or content</td>
+</tr>
+<tr>
+<td><strong>📚 get-file-versions</strong></td>
+<td>Get version history of a file</td>
+</tr>
+<tr>
+<td><strong>🔄 restore-file-version</strong></td>
+<td>Restore a specific version of a file</td>
+</tr>
 </table>
 
 ### 🔗 Sharing Operations
@@ -228,6 +248,96 @@ node build/index.js
   }
 }
 ```
+
+</details>
+
+<details>
+<summary><strong>🔄 Move File</strong></summary>
+
+```json
+{
+  "name": "move-file",
+  "arguments": {
+    "sourcePath": "/old-location/document.pdf",
+    "destinationPath": "/new-location/document.pdf",
+    "overwrite": false
+  }
+}
+```
+
+**Response:** Confirmation message with source and destination paths
+
+</details>
+
+<details>
+<summary><strong>📄 Copy File</strong></summary>
+
+```json
+{
+  "name": "copy-file",
+  "arguments": {
+    "sourcePath": "/Documents/template.docx",
+    "destinationPath": "/Projects/new-document.docx",
+    "overwrite": true
+  }
+}
+```
+
+**Response:** Confirmation message with copy operation details
+
+</details>
+
+<details>
+<summary><strong>🔍 Search Files</strong></summary>
+
+```json
+{
+  "name": "search-files",
+  "arguments": {
+    "query": "quarterly report",
+    "path": "/Documents",
+    "limit": 20,
+    "type": "file"
+  }
+}
+```
+
+**Response:** Array of matching files with full metadata
+
+**Type Options:** `file`, `directory`, `all`
+
+</details>
+
+<details>
+<summary><strong>📚 Get File Versions</strong></summary>
+
+```json
+{
+  "name": "get-file-versions",
+  "arguments": {
+    "path": "/Documents/important-document.pdf"
+  }
+}
+```
+
+**Response:** Array of file versions with timestamps, sizes, and user information
+
+</details>
+
+<details>
+<summary><strong>🔄 Restore File Version</strong></summary>
+
+```json
+{
+  "name": "restore-file-version",
+  "arguments": {
+    "path": "/Documents/important-document.pdf",
+    "versionId": "1672531200"
+  }
+}
+```
+
+**Response:** Confirmation of version restoration
 
 </details>
 

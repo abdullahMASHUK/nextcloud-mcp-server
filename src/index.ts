@@ -213,6 +213,113 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['shareId'],
         },
       },
+      {
+        name: 'move-file',
+        description: 'Move or rename a file or directory in NextCloud',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            sourcePath: {
+              type: 'string',
+              description: 'Current path of the file or directory',
+            },
+            destinationPath: {
+              type: 'string',
+              description: 'New path where the file or directory should be moved',
+            },
+            overwrite: {
+              type: 'boolean',
+              description: 'Whether to overwrite if destination exists',
+              default: false,
+            },
+          },
+          required: ['sourcePath', 'destinationPath'],
+        },
+      },
+      {
+        name: 'copy-file',
+        description: 'Copy a file or directory in NextCloud',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            sourcePath: {
+              type: 'string',
+              description: 'Path of the file or directory to copy',
+            },
+            destinationPath: {
+              type: 'string',
+              description: 'Destination path for the copy',
+            },
+            overwrite: {
+              type: 'boolean',
+              description: 'Whether to overwrite if destination exists',
+              default: false,
+            },
+          },
+          required: ['sourcePath', 'destinationPath'],
+        },
+      },
+      {
+        name: 'search-files',
+        description: 'Search for files and directories by name or content',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            query: {
+              type: 'string',
+              description: 'Search query string',
+            },
+            path: {
+              type: 'string',
+              description: 'Directory path to search within (optional)',
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum number of results to return',
+              default: 50,
+            },
+            type: {
+              type: 'string',
+              enum: ['file', 'directory', 'all'],
+              description: 'Type of items to search for',
+              default: 'all',
+            },
+          },
+          required: ['query'],
+        },
+      },
+      {
+        name: 'get-file-versions',
+        description: 'Get version history of a file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            path: {
+              type: 'string',
+              description: 'Path of the file to get versions for',
+            },
+          },
+          required: ['path'],
+        },
+      },
+      {
+        name: 'restore-file-version',
+        description: 'Restore a specific version of a file',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            path: {
+              type: 'string',
+              description: 'Path of the file to restore',
+            },
+            versionId: {
+              type: 'string',
+              description: 'ID of the version to restore',
+            },
+          },
+          required: ['path', 'versionId'],
+        },
+      },
     ],
   };
 });
@@ -436,6 +543,152 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         }
         
         const result = await nextcloud.deleteShare(shareId);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result.success ? result.data! : `Error: ${result.error}`,
+            },
+          ],
+        };
+      }
+
+      case 'move-file': {
+        const sourcePath = args?.sourcePath as string;
+        const destinationPath = args?.destinationPath as string;
+        const overwrite = args?.overwrite as boolean;
+
+        if (!sourcePath || !destinationPath) {
+          throw new Error('Source path and destination path are required');
+        }
+
+        const result = await nextcloud.moveFile({
+          sourcePath,
+          destinationPath,
+          overwrite
+        });
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result.success ? result.data! : `Error: ${result.error}`,
+            },
+          ],
+        };
+      }
+
+      case 'copy-file': {
+        const sourcePath = args?.sourcePath as string;
+        const destinationPath = args?.destinationPath as string;
+        const overwrite = args?.overwrite as boolean;
+
+        if (!sourcePath || !destinationPath) {
+          throw new Error('Source path and destination path are required');
+        }
+
+        const result = await nextcloud.copyFile({
+          sourcePath,
+          destinationPath,
+          overwrite
+        });
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: result.success ? result.data! : `Error: ${result.error}`,
+            },
+          ],
+        };
+      }
+
+      case 'search-files': {
+        const query = args?.query as string;
+        const path = args?.path as string;
+        const limit = args?.limit as number;
+        const type = args?.type as 'file' | 'directory' | 'all';
+
+        if (!query) {
+          throw new Error('Search query is required');
+        }
+
+        const result = await nextcloud.searchFiles({
+          query,
+          path,
+          limit,
+          type
+        });
+
+        if (result.success && result.data) {
+          const fileList = result.data
+            .map(file => `${file.type === 'directory' ? '📁' : '📄'} ${file.name} (${file.path}) - ${file.size} bytes, modified: ${file.lastModified.toISOString()}`)
+            .join('\n');
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Search results for "${query}":\n${fileList || 'No files found'}`,
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: ${result.error}`,
+              },
+            ],
+          };
+        }
+      }
+
+      case 'get-file-versions': {
+        const path = args?.path as string;
+
+        if (!path) {
+          throw new Error('File path is required');
+        }
+
+        const result = await nextcloud.getFileVersions(path);
+
+        if (result.success && result.data) {
+          const versionList = result.data
+            .map(version => `Version ${version.id}: ${version.timestamp.toISOString()} - ${version.size} bytes by ${version.user}${version.label ? ` (${version.label})` : ''}`)
+            .join('\n');
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `File versions for "${path}":\n${versionList || 'No versions found'}`,
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Error: ${result.error}`,
+              },
+            ],
+          };
+        }
+      }
+
+      case 'restore-file-version': {
+        const path = args?.path as string;
+        const versionId = args?.versionId as string;
+
+        if (!path || !versionId) {
+          throw new Error('File path and version ID are required');
+        }
+
+        const result = await nextcloud.restoreFileVersion(path, versionId);
+
         return {
           content: [
             {
